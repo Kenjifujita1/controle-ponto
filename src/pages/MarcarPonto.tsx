@@ -34,7 +34,8 @@ const EMOJI: Record<TipoMarcacao, string> = {
 }
 
 export default function MarcarPonto() {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [etapa, setEtapa] = useState<Etapa>('preparando')
   const [msg, setMsg] = useState('Preparando câmera e reconhecimento…')
   const [ident, setIdent] = useState<Identidade | null>(null)
@@ -44,11 +45,11 @@ export default function MarcarPonto() {
   const [pin, setPin] = useState('')
 
   useEffect(() => {
-    let stream: MediaStream | null = null
     ;(async () => {
       try {
         await carregarModelos()
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 480, height: 480 }, audio: false })
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 480, height: 480 }, audio: false })
+        streamRef.current = stream
         if (videoRef.current) videoRef.current.srcObject = stream
         setEtapa('identificar')
         setMsg('Aproxime o rosto e toque em identificar')
@@ -58,8 +59,18 @@ export default function MarcarPonto() {
         setMsg('Câmera indisponível — use matrícula + PIN')
       }
     })()
-    return () => stream?.getTracks().forEach((t) => t.stop())
+    return () => streamRef.current?.getTracks().forEach((t) => t.stop())
   }, [])
+
+  // Reconecta o stream sempre que o elemento de vídeo (re)aparece na tela —
+  // corrige a câmera "travada" ao voltar para a tela de identificar.
+  function attachVideo(el: HTMLVideoElement | null) {
+    videoRef.current = el
+    if (el && streamRef.current && el.srcObject !== streamRef.current) {
+      el.srcObject = streamRef.current
+      el.play?.().catch(() => {})
+    }
+  }
 
   async function chamar(payload: Record<string, unknown>) {
     const res = await fetch(`${functionsUrl}/marcar-ponto`, {
@@ -180,7 +191,7 @@ export default function MarcarPonto() {
 
         {!usarPin && (
           <div className="card mb-4 overflow-hidden p-0">
-            <video ref={videoRef} autoPlay playsInline muted className="aspect-square w-full scale-x-[-1] bg-black object-cover" />
+            <video ref={attachVideo} autoPlay playsInline muted className="aspect-square w-full scale-x-[-1] bg-black object-cover" />
           </div>
         )}
 
