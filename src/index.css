@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #000000;
+  color: #f5f5f5;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media print {
+  body { background: #fff; color: #000; }
+  nav, header button, .print\:hidden { display: none !important; }
+  .card { border: 1px solid #ccc; background: #fff !important; color: #000; }
+  table, th, td { color: #000 !important; }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  /* Botão principal: branco com texto preto (alto contraste P&B) */
+  .btn-primary { @apply btn bg-white text-black hover:bg-neutral-200; }
+  .btn-ghost   { @apply btn bg-neutral-900 text-white border border-neutral-700 hover:bg-neutral-800; }
+  .card        { @apply rounded-2xl bg-neutral-950 border border-neutral-800 p-5; }
+  .input       { @apply w-full rounded-xl bg-neutral-900 border border-neutral-700 px-4 py-3 text-white outline-none focus:border-white; }
+  .label       { @apply block text-sm font-medium text-neutral-300 mb-1; }
+}
